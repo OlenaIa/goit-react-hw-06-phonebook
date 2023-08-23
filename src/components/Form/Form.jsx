@@ -1,17 +1,40 @@
 import { useState } from "react";
+import { nanoid } from 'nanoid'
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import { useDispatch, useSelector } from "react-redux";
+import { addContact, getPhoneBookValue } from "redux/phoneBookSlice";
 import { FormStyle } from "./Form.styled";
 import { InputStyle, LabelStyle, ButtonStyle } from "components/App.styled";
-import PropTypes from 'prop-types'
 
-export const Form = ({ onSubmit }) => {
+export const Form = () => {
     const [name, setName] = useState('');
     const [number, setNumber] = useState('');
+    const dispatch = useDispatch();
+    const phoneBook = useSelector(getPhoneBookValue);
 
     const onSubmitAddContact = (event) => {
         event.preventDefault();
         const data = { name, number };
-        onSubmit(data);
+        const newObj = { ...data, id: nanoid() };
+
+        if (isNameNew(phoneBook, newObj) !== undefined) {
+            Notify.warning(`${newObj.name} is already in contacts`, {
+                width: '400px',
+                position: 'center-center',
+                timeout: 3000,
+                fontSize: '20px',
+            });
+            return;
+        };
+
+        dispatch(addContact(newObj))
+        
         reset();
+    };
+
+    const isNameNew = (phoneBook, newObj) => {
+        return phoneBook.find(({ name }) =>
+            name.toLowerCase() === newObj.name.toLowerCase())
     };
 
     const onChangeInput = (event) => {
@@ -63,8 +86,4 @@ export const Form = ({ onSubmit }) => {
             </ButtonStyle>
         </FormStyle>
     );
-};
-
-Form.propTypes = {
-    onSubmit: PropTypes.func.isRequired
 };

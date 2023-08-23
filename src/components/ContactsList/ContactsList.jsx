@@ -1,17 +1,30 @@
-import { ContactItem } from "components/ContactItem/ContactItem"
-import PropTypes from 'prop-types'
-import { ContactListStyle } from "./ContactsList.styled"
+import { ContactListStyle, ContactItemStyle } from "./ContactsList.styled"
+import { ButtonStyle } from 'components/App.styled';
+import { getFilter } from "redux/filterSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { delContact, getPhoneBookValue } from "redux/phoneBookSlice";
 
+export const ContactsList = () => {
+    const dispatch = useDispatch();
 
-export const ContactsList = ({ contacts, onDeleteContact }) => (
+    const phoneBook = useSelector(getPhoneBookValue);
+    const filterPhoneBook = useSelector(getFilter);
+
+    const lowerFilter = filterPhoneBook.toLowerCase();
+    const visibleContacts = phoneBook.filter(({ name }) =>
+        (name.toLowerCase().includes(lowerFilter)));
+  
+    const deleteContact = (contactId) => {
+        dispatch(delContact(contactId))
+    };
+    
+    return (
         <ContactListStyle>
-            {contacts.map(contact => (
-                <ContactItem name={contact.name} number={contact.number} id={contact.id} onDeleteContact={onDeleteContact} />
-            ))}
+            {visibleContacts.map(({ name, number, id }) => (
+                <ContactItemStyle key={id}>
+                    <p>{name}: {number}</p>
+                    <ButtonStyle type="button" onClick={() => deleteContact(id)}>Delete</ButtonStyle>
+                </ContactItemStyle>))}
         </ContactListStyle>
     );
-
-ContactsList.propTypes = {
-    contacts: PropTypes.arrayOf(PropTypes.objectOf(PropTypes.string.isRequired,).isRequired).isRequired,
-    onDeleteContact: PropTypes.func.isRequired,
 };
